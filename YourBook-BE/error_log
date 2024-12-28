@@ -1,0 +1,46 @@
+[30-Nov-2023 15:49:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:50:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:50:41 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:55:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:55:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:57:00 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:57:09 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 15:57:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/yoursbooks/YourBook/bootstrap/app.php:14
+Stack trace:
+#0 /home/yoursbooks/YourBook/artisan(20): require_once()
+#1 {main}
+  thrown in /home/yoursbooks/YourBook/bootstrap/app.php on line 14
+[30-Nov-2023 16:02:54 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 8192 bytes) in /home/yoursbooks/YourBook/vendor/symfony/finder/Iterator/RecursiveDirectoryIterator.php on line 71
+[30-Nov-2023 16:02:54 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 32768 bytes) in /home/yoursbooks/YourBook/vendor/symfony/error-handler/Error/FatalError.php on line 1
+[18-Dec-2023 18:00:26 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 32768 bytes) in /home/yoursbooks/YourBook/vendor/laravel/prompts/src/MultiSearchPrompt.php on line 1
+[18-Dec-2023 18:00:26 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 12288 bytes) in /home/yoursbooks/YourBook/vendor/laravel/framework/src/Illuminate/Auth/AuthManager.php on line 145
+[18-Dec-2023 18:38:19 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 65536 bytes) in /home/yoursbooks/YourBook/vendor/laravel/prompts/src/TextPrompt.php on line 14
+[18-Dec-2023 18:38:19 UTC] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 65536 bytes) in /home/yoursbooks/YourBook/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php on line 254

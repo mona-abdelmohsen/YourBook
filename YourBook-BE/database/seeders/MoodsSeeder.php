@@ -1,0 +1,411 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Posts\Mood;
+use Illuminate\Database\Seeder;
+
+class MoodsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Mood::query()->insert([
+            // Feeling
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Awesome',
+                'mood_pic'              => 'assets/img/icons/emoji/awesome.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Great',
+                'mood_pic'              => 'assets/img/icons/emoji/great.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Calm',
+                'mood_pic'              => 'assets/img/icons/emoji/calm.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Cool',
+                'mood_pic'              => 'assets/img/icons/emoji/cool.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Sad',
+                'mood_pic'              => 'assets/img/icons/emoji/sad.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Crazy',
+                'mood_pic'              => 'assets/img/icons/emoji/crazy.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Devil',
+                'mood_pic'              => 'assets/img/icons/emoji/devil.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Embarrassed',
+                'mood_pic'              => 'assets/img/icons/emoji/embarrassed.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Angry',
+                'mood_pic'              => 'assets/img/icons/emoji/angry.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Exhausted',
+                'mood_pic'              => 'assets/img/icons/emoji/exhausted.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Hilarious',
+                'mood_pic'              => 'assets/img/icons/emoji/hilarious.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'In love',
+                'mood_pic'              => 'assets/img/icons/emoji/love.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Like a robot',
+                'mood_pic'              => 'assets/img/icons/emoji/robot.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Shocked',
+                'mood_pic'              => 'assets/img/icons/emoji/shocked.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Sick',
+                'mood_pic'              => 'assets/img/icons/emoji/sick.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Sleeping',
+                'mood_pic'              => 'assets/img/icons/emoji/sleeping.svg',
+            ],
+            [
+                'activity'              => 'status',
+                'activity_description'          => 'how do you feel?',
+                'activity_pic'  => 'assets/img/icons/activities/feeling.svg',
+                'mood'                  => 'Thinking',
+                'mood_pic'              => 'assets/img/icons/emoji/thinking.svg',
+            ],
+
+
+            // Drinking
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'water',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/water.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a coffee',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/coffee.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a soda',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/soda.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'an energy drink',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/energy-drink.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a smoothie',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/smoothie.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a beer',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/beer.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a glass of wine',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/wine.svg',
+            ],
+            [
+                'activity'              => 'drinking',
+                'activity_description'          => 'What are you drinking?',
+                'activity_pic'  => 'assets/img/icons/activities/drinking.svg',
+                'mood'                  => 'a cocktail',
+                'mood_pic'              => 'assets/img/icons/activities/drinking/cocktail.svg',
+            ],
+            // Eating
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a good meal',
+                'mood_pic'              => 'assets/img/icons/activities/eating/meal.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'at the restaurant',
+                'mood_pic'              => 'assets/img/icons/activities/eating/restaurant.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'candy',
+                'mood_pic'              => 'assets/img/icons/activities/eating/candy.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a piece of cheese',
+                'mood_pic'              => 'assets/img/icons/activities/eating/cheese.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a pack of fries',
+                'mood_pic'              => 'assets/img/icons/activities/eating/fries.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a fruit basket',
+                'mood_pic'              => 'assets/img/icons/activities/eating/fruits.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'an ice cream',
+                'mood_pic'              => 'assets/img/icons/activities/eating/ice-cream.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a piece of meat',
+                'mood_pic'              => 'assets/img/icons/activities/eating/meat.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a pizza slice',
+                'mood_pic'              => 'assets/img/icons/activities/eating/pizza.svg',
+            ],
+            [
+                'activity'              => 'eating',
+                'activity_description'          => 'What are you eating?',
+                'activity_pic'  => 'assets/img/icons/activities/eating.svg',
+                'mood'                  => 'a pack of sushis',
+                'mood_pic'              => 'assets/img/icons/activities/eating/sushi.svg',
+            ],
+            // Reading
+            [
+                'activity'              => 'reading',
+                'activity_description'          => 'What are you reading?',
+                'activity_pic'  => 'assets/img/icons/activities/reading.svg',
+                'mood'                  => 'a book',
+                'mood_pic'              => 'assets/img/icons/feed/book.svg',
+            ],
+            [
+                'activity'              => 'reading',
+                'activity_description'          => 'What are you reading?',
+                'activity_pic'  => 'assets/img/icons/activities/reading.svg',
+                'mood'                  => 'an article',
+                'mood_pic'              => 'assets/img/icons/feed/book.svg',
+            ],
+            [
+                'activity'              => 'reading',
+                'activity_description'          => 'What are you reading?',
+                'activity_pic'  => 'assets/img/icons/activities/reading.svg',
+                'mood'                  => 'a journal',
+                'mood_pic'              => 'assets/img/icons/feed/book.svg',
+            ],
+            // Watching
+            [
+                'activity'              => 'watching',
+                'activity_description'          => 'What are you watching?',
+                'activity_pic'  => 'assets/img/icons/activities/watching.svg',
+                'mood'                  => 'TV Show',
+                'mood_pic'              => 'assets/img/icons/feed/movie.svg',
+            ],
+            [
+                'activity'              => 'watching',
+                'activity_description'          => 'What are you watching?',
+                'activity_pic'  => 'assets/img/icons/activities/watching.svg',
+                'mood'                  => 'TV Series',
+                'mood_pic'              => 'assets/img/icons/feed/movie.svg',
+            ],
+            [
+                'activity'              => 'watching',
+                'activity_description'          => 'What are you watching?',
+                'activity_pic'  => 'assets/img/icons/activities/watching.svg',
+                'mood'                  => 'Movie',
+                'mood_pic'              => 'assets/img/icons/feed/movie.svg',
+            ],
+            // Travelling
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'USA',
+                'mood_pic'              => 'assets/img/icons/flags/united-states-of-america.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'France',
+                'mood_pic'              => 'assets/img/icons/flags/france.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'UK',
+                'mood_pic'              => 'assets/img/icons/flags/united-kingdom.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Spain',
+                'mood_pic'              => 'assets/img/icons/flags/spain.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Germany',
+                'mood_pic'              => 'assets/img/icons/flags/germany.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Canada',
+                'mood_pic'              => 'assets/img/icons/flags/canada.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Japan',
+                'mood_pic'              => 'assets/img/icons/flags/japan.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'China',
+                'mood_pic'              => 'assets/img/icons/flags/china.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Australia',
+                'mood_pic'              => 'assets/img/icons/flags/australia.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'South Africa',
+                'mood_pic'              => 'assets/img/icons/flags/south-africa.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Russia',
+                'mood_pic'              => 'assets/img/icons/flags/russia.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Brasil',
+                'mood_pic'              => 'assets/img/icons/flags/brasil.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Mexico',
+                'mood_pic'              => 'assets/img/icons/flags/mexico.svg',
+            ],
+            [
+                'activity'              => 'travelling',
+                'activity_description'          => 'Where are you travelling to?',
+                'activity_pic'  => 'assets/img/icons/activities/travelling.svg',
+                'mood'                  => 'Italy',
+                'mood_pic'              => 'assets/img/icons/flags/italy.svg',
+            ],
+        ]);
+    }
+}

@@ -1,0 +1,46 @@
+:root {
+    --main-color:#080884;
+    --light-gray:#eee
+}
+
+.text-main {
+    color: var(--main-color) !important;
+}
+.bg-main {
+    background: var(--main-color) !important;
+}
+
+.bg-main-light {
+    background: var(--main-color) !important;
+    opacity: .6;
+
+}
+.bg-gray-light {
+    background-color: var(--light-gray) !important;
+}
+
+.chat-wrapper .chat-inner .chat-panel .panel-inner .panel-body.is-user-details .panel-body-inner .user-badges .hexagon:before {
+    content: "";
+    position: absolute;
+    top: -12.2px;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-left: 18px solid rgba(0,0,0,0);
+    border-right: 18px solid rgba(0,0,0,0);
+    border-bottom: 12.2px solid #eee;
+    transition: all .3s ease-in-out;
+}
+.chat-wrapper .chat-inner .chat-panel .panel-inner .panel-body.is-user-details .panel-body-inner .user-badges .hexagon:after {
+    content: "";
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-left: 18px solid rgba(0,0,0,0);
+    border-right: 18px solid rgba(0,0,0,0);
+    border-top: 12.5px solid #eee;
+    transition: all .3s ease-in-out;
+}
+
