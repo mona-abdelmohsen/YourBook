@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use League\CommonMark\CommonMarkConverter;
 
 class PostController extends Controller
 {
@@ -165,118 +166,166 @@ class PostController extends Controller
         $user_id = request()->user_id;
         return $this->success('success', $postRepository->getPosts(user_id: $user_id), self::$responseCode::HTTP_OK);
     }
+    //updated
 
     public function store(Request $request, PostRepositoryInterface $postRepository): JsonResponse
-    {
-        $validator = Validator::make(request()->toArray(), [
-            'content'   => 'required_without_all:images,videos,tagged_books,share_id',
-            'share_id'  => 'nullable|exists:posts,id',
-            'show_in_feed'  => 'required|in:0,1',
-            'privacy'   => [
-                'required',
-                Rule::enum(PrivacyEnum::class),
-            ],
-            'mood_id'   => 'nullable|exists:moods,id',
-            'location'  => 'nullable|string',
-            'share_link'    => 'nullable|url:http,https|active_url',
-            'images.*'     => 'image|max:'.env('MAX_UPLOAD_FILE_SIZE'),
-            'videos.*' => 'nullable|file|mimes:mp4,mov,ogg,qt',
-            'audios.*'       => 'nullable',
-            'content_background'    => 'nullable|string',
-            'tagged_friends.*'    => 'exists:users,id',
-            'tagged_books.*'    => [
-                Rule::exists('books', 'id')
-                    ->where('user_id', auth()->id())
-            ],
-        ]);
-    
-        if ($validator->fails()) {
-            return $this->error($validator->errors()->first(),
-                $validator->errors(),
-                ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
-        }
-    
-        // Create Post Model
-        $post = Post::create(
-            array_merge(
-                $request->only([
-                    'content', 'mood_id', 'location', 'share_link',
-                    'privacy', 'show_in_feed', 'content_background',
-                    'share_id',
-                ]),
-                [
-                    'user_id'       => auth()->id(),
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]
-            )
-        );
-    
-        /** Upload Images and Video files  */
-        $this->mediaHandler($post, 'images');
-        $this->mediaHandler($post, 'videos');
-        $this->mediaHandler($post, 'audios');
-    
-        /** Tagged Friends  */
-        if (request()->has('tagged_friends')) {
-            $authUser = auth()->user();
-            $taggedFriends = collect($request->tagged_friends);
-            $errors = [];
-    
-            $filteredTaggedFriends = $taggedFriends->filter(function ($friendId) use ($authUser, &$errors) {
-                $friend = User::find($friendId);
-    
-                if (!$friend) {
-                    $errors[] = "User with ID $friendId does not exist.";
-                    return false; // Skip invalid users
-                }
-    
-                $mentionSetting = $friend->settings()
-                    ->where('setting_name', SettingName::MentionMe->value)
-                    ->first();
-    
-                if (!$mentionSetting) {
-                    return true;
-                }
-    
-                switch ($mentionSetting->setting_value) {
-                    case SettingValue::All->value:
-                        return true; // Allow mention for everyone
-                    case SettingValue::MyFriends->value:
-                        if ($friend->isFriendWith($authUser)) {
-                            return true;
-                        }
-                        $errors[] = "You are not friends with User ID $friendId and cannot mention them.";
-                        return false;
-                    case SettingValue::FriendsOfFriends->value:
-                        if ($friend->isFriendOfFriend($authUser)) {
-                            return true;
-                        }
-                        $errors[] = "You are not a friend of a friend of User ID $friendId and cannot mention them.";
-                        return false;
-                    default:
-                        $errors[] = "User with ID $friendId has an invalid mention setting.";
-                        return false;
-                }
-            });
-    
-            if ($errors) {
-                return $this->error("Some users could not be tagged.", ['errors' => $errors], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
-            }
-    
-            // Sync only the filtered friends
-            $post->taggedFriends()->sync($filteredTaggedFriends);
-        }
-    
-        /** Tagged Books */
-        if (request()->has('tagged_books')) {
-            $post->taggedBooks()->sync($request->tagged_books);
-        }
-    
-        return $this->success("success", $postRepository->getPost($post->id), self::$responseCode::HTTP_OK);
-    }
-    
+{
+    $validator = Validator::make(request()->toArray(), [
+        'content'   => 'required_without_all:images,videos,audios',//tagged_books,share_id',
+        'share_id'  => 'nullable|exists:posts,id',
+        'show_in_feed'  => 'required|in:0,1',
+        'privacy'   => [
+            'required',
+            Rule::enum(PrivacyEnum::class),
+        ],
+        'mood_id'   => 'nullable|exists:moods,id',
+        'location'  => 'nullable|string',
+        'share_link'    => 'nullable|url:http,https|active_url',
+        'images.*'     => 'image|max:'.env('MAX_UPLOAD_FILE_SIZE'),
+        'videos.*' => 'nullable|file|mimes:mp4,mov,ogg,qt',
+        'audios.*'       => 'nullable|file|mimes:mp3,wav|max:10240',
+        'content_background'    => 'nullable|string',
+        'tagged_friends.*'    => 'exists:users,id',
+        'tagged_books.*'    => [
+            Rule::exists('books', 'id')
+                ->where('user_id', auth()->id())
+        ],
+    ]);
 
+    if ($validator->fails()) {
+        return $this->error($validator->errors()->first(),
+            $validator->errors(),
+            ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    $content = $request->input('content'); 
+
+    if (!is_null($content) && $content !== '') {
+        // Convert the content to CommonMarkConverter if it's not null/empty
+        $content = (new CommonMarkConverter())->convert($content);
+    } else {
+        $content = '';
+    }
+
+    // Create Post Model
+    $post = Post::create(
+        array_merge(
+            $request->only([
+                'mood_id', 'location', 'share_link',
+                'privacy', 'show_in_feed', 'content_background',
+                'share_id',
+            ]),
+            [
+                'user_id'       => auth()->id(),
+                'content'       => $content,  // Save the processed content here
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]
+        )
+    );
+
+    /** Upload Images and Video files  */
+    $this->mediaHandler($post, 'images');
+    $this->mediaHandler($post, 'videos');
+    $this->mediaHandler($post, 'audios');
+
+    /** Tagged Friends  */
+    if (request()->has('tagged_friends')) {
+        $authUser = auth()->user();
+        $taggedFriends = collect($request->tagged_friends);
+        $errors = [];
+
+        $filteredTaggedFriends = $taggedFriends->filter(function ($friendId) use ($authUser, &$errors) {
+            $friend = User::find($friendId);
+
+            if (!$friend) {
+                $errors[] = "User with ID $friendId does not exist.";
+                return false; // Skip invalid users
+            }
+
+            $mentionSetting = $friend->settings()
+                ->where('setting_name', SettingName::MentionMe->value)
+                ->first();
+
+            if (!$mentionSetting) {
+                return true;
+            }
+
+            switch ($mentionSetting->setting_value) {
+                case SettingValue::All->value:
+                    return true; // Allow mention for everyone
+                case SettingValue::MyFriends->value:
+                    if ($friend->isFriendWith($authUser)) {
+                        return true;
+                    }
+                    $errors[] = "You are not friends with User ID $friendId and cannot mention them.";
+                    return false;
+                case SettingValue::FriendsOfFriends->value:
+                    if ($friend->isFriendOfFriend($authUser)) {
+                        return true;
+                    }
+                    $errors[] = "You are not a friend of a friend of User ID $friendId and cannot mention them.";
+                    return false;
+                default:
+                    $errors[] = "User with ID $friendId has an invalid mention setting.";
+                    return false;
+            }
+        });
+
+        if ($errors) {
+            return $this->error("Some users could not be tagged.", ['errors' => $errors], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Sync only the filtered friends
+        $post->taggedFriends()->sync($filteredTaggedFriends);
+    }
+
+    /** Tagged Books */
+    if (request()->has('tagged_books')) {
+        $post->taggedBooks()->sync($request->tagged_books);
+    }
+
+    return $this->success("success", $postRepository->getPost($post->id), self::$responseCode::HTTP_OK);
+}
+
+
+/**
+ * Validate tagged friends for the post.
+ *
+ * @param array $taggedFriends
+ * @return array Validation errors, if any.
+ */
+private function validateTaggedFriends(array $taggedFriends): array
+{
+    $errors = [];
+    $authUser = auth()->user();
+
+    foreach ($taggedFriends as $friendId) {
+        $friend = User::find($friendId);
+        if (!$friend) {
+            $errors[] = "User with ID $friendId does not exist.";
+            continue;
+        }
+
+        $mentionSetting = $friend->settings()->where('setting_name', SettingName::MentionMe->value)->first();
+        if ($mentionSetting) {
+            $canMention = match ($mentionSetting->setting_value) {
+                SettingValue::All->value => true,
+                SettingValue::MyFriends->value => $friend->isFriendWith($authUser),
+                SettingValue::FriendsOfFriends->value => $friend->isFriendOfFriend($authUser),
+                default => false,
+            };
+
+            if (!$canMention) {
+                $errors[] = "Cannot mention User ID $friendId due to their settings.";
+            }
+        }
+    }
+
+    return $errors;
+}
+
+    
 
     /**
      * @return JsonResponse

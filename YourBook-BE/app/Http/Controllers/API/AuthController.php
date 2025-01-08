@@ -201,21 +201,26 @@ class AuthController extends Controller
     // Delete Account
 
     public function deleteAccount(Request $request): JsonResponse
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+    // $user=User::findOrFail(Auth::id());
 
-        if ($user) {
-            // Revoke all tokens for the user
-            $user->tokens()->delete(); 
+    if ($user) {
+        // Delete all posts associated with the user
+        $user->posts()->delete(); // Assuming you have a relationship defined for posts
 
-            // Soft delete the user
-            $user->delete();
+        // Revoke all tokens for the user
+        $user->tokens()->delete();
 
-            return $this->success('Account successfully deleted.', null, 200);
-        }
+        // Soft delete the user
+        $user->delete();
 
-        return $this->success('User not found.', null, 404);
+        return $this->success('Account and associated posts successfully deleted.', null, 200);
     }
+
+    return $this->success('User not found.', null, 404);
+}
+
 
     // disable users
     public function disableUser($user_id)
