@@ -207,7 +207,13 @@ class AuthController extends Controller
 
     if ($user) {
         // Delete all posts associated with the user
-        $user->posts()->delete(); // Assuming you have a relationship defined for posts
+        $user->posts()->delete();
+        // Delete all books associated with the user
+        $user->books()->delete();
+        // Delete all stories associated with the user
+        $user->stories()->delete();
+        // Delete the user's media (clear all collections)
+        $user->clearMediaCollection();
 
         // Revoke all tokens for the user
         $user->tokens()->delete();
