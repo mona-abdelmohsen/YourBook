@@ -19,11 +19,15 @@ class SetLocale
         // App::setLocale('ar');
         // return $next($request);
 
-        $locale = substr($request->header('Accept-Language', 'en'), 0, 2);
-        $supportedLocales = ['en', 'ar'];
+        // $locale = substr($request->header('Accept-Language', 'en'), 0, 2);
+        // $supportedLocales = ['en', 'ar'];
     
-        App::setLocale(in_array($locale, $supportedLocales) ? $locale : 'en');
+        // App::setLocale(in_array($locale, $supportedLocales) ? $locale : 'en');
     
+        // return $next($request);
+        $locale = $request->header('Accept-Language', config('app.fallback_locale'));
+        App::setLocale($locale);
+
         return $next($request);
     }
 }

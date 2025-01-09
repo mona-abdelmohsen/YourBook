@@ -221,7 +221,7 @@ class AuthController extends Controller
         // Soft delete the user
         $user->delete();
 
-        return $this->success('Account and associated posts successfully deleted.', null, 200);
+        return $this->success('Account successfully deleted.', null, 200);
     }
 
     return $this->success('User not found.', null, 404);

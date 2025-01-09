@@ -152,9 +152,9 @@ class PostController extends Controller
         $post = $postRepository->getPost(post_id: $post_id);
         if (!$post) {
             // Return error if post is not found
-            return $this->error('This post is not found.', null, self::$responseCode::HTTP_NOT_FOUND);
+            return $this->error(__('validation.custom.post_not_found'), null, self::$responseCode::HTTP_NOT_FOUND);
         }
-        return $this->success('success', $post, self::$responseCode::HTTP_OK);
+        return $this->success(__('validation.custom.success'), $post, self::$responseCode::HTTP_OK);
     }
 
     /**

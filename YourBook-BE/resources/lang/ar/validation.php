@@ -105,6 +105,10 @@ return [
     'url'                  => 'يجب أن يكون :attribute عنوان URL صالحاً.',
     'uuid'                 => 'يجب أن يكون :attribute UUID صالحاً.',
 
-    'invalid_grant' => 'بيانات الاعتماد التي تم إدخالها غير صحيحة.',
-    
+    'custom' => [
+    'post_not_found' => 'لم يتم العثور على هذا المنشور.',
+    'user_not_found' => 'لم يتم العثور على المستخدم.',
+    'access_denied' => 'تم رفض الوصول.',
+    'success' => 'نجاح.',
+    ]
 ];
