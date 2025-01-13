@@ -50,7 +50,7 @@ class SettingController extends Controller
                 } else {
                     // Create a new setting
                     Setting::create([
-                        'user_id' => $request->user_id,
+                        'user_id' => $user_id,
                         'setting_name' => $settingData['setting_name'],
                         'setting_value' => $settingData['setting_value'],
                     ]);
