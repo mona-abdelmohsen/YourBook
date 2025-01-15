@@ -171,7 +171,7 @@ class PostController extends Controller
     public function store(Request $request, PostRepositoryInterface $postRepository): JsonResponse
 {
     $validator = Validator::make(request()->toArray(), [
-        'content'   => 'required_without_all:images,videos,audios',//tagged_books,share_id',
+        'content'   => 'required_without_all:images,videos,audios,share_link',
         'share_id'  => 'nullable|exists:posts,id',
         'show_in_feed'  => 'required|in:0,1',
         'privacy'   => [
