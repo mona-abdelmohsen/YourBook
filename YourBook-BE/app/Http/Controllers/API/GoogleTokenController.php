@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Google\Client as Google_Client;
@@ -11,13 +12,14 @@ use Google\Client as Google_Client;
 
 class GoogleTokenController extends Controller
 {
+    use ApiResponse;
     // Verify the Google token and authenticate the user
     public function verifyGoogleToken(Request $request)
 {
     $idToken = $request->input('id_token');
 
     if (!$idToken) {
-        return response()->json(['error' => 'ID Token is missing'], 400);
+        return $this->error('ID Token is missing', null, self::$responseCode::HTTP_BAD_REQUEST);
     }
 
     try {
@@ -27,22 +29,26 @@ class GoogleTokenController extends Controller
         ]);
 
         if ($response->failed()) {
-            return response()->json(['error' => 'Invalid ID Token'], 401);
+            return $this->error('Invalid ID Token', null, self::$responseCode::HTTP_UNAUTHORIZED);
+
         }
 
         $payload = $response->json();
 
         // Validate claims
         if ($payload['iss'] !== 'https://accounts.google.com') {
-            return response()->json(['error' => 'Invalid issuer'], 401);
+            return $this->error('Invalid issuer', null, self::$responseCode::HTTP_UNAUTHORIZED);
+            
         }
 
         if ($payload['aud'] !== env('GOOGLE_CLIENT_ID')) {
-            return response()->json(['error' => 'Invalid audience'], 401);
+            return $this->error('Invalid audience', null, self::$responseCode::HTTP_UNAUTHORIZED);
+
         }
 
         if ($payload['exp'] < time()) {
-            return response()->json(['error' => 'Token expired'], 401);
+            return $this->error('Token expired', null, self::$responseCode::HTTP_UNAUTHORIZED);
+            
         }
 
         // User login or registration logic
@@ -58,15 +64,13 @@ class GoogleTokenController extends Controller
         // Generate access token for authenticated user
         $tokenResult = $user->createToken('GoogleLoginToken');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
+        return $this->success('Login done successfully', [
             'access_token' => $tokenResult->accessToken,
-            'user' => $user,
-        ]);
-
+            'user' => $user
+        ], self::$responseCode::HTTP_OK);
+        
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return $this->error($e->getMessage(), null, self::$responseCode::HTTP_INTERNAL_SERVER_ERROR);
     }
 }
 
