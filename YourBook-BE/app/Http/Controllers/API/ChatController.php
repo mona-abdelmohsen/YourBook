@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use Pusher\Pusher;
 use Pusher\PusherException;
+use Kreait\Firebase\Messaging\CloudMessage; 
+use Illuminate\Support\Facades\Log;      
+
 
 class ChatController extends Controller
 {
@@ -64,79 +67,193 @@ class ChatController extends Controller
     /**
      * Send a message to database
      */
-    public function send(Request $request): JsonResponse
-    {
-        // default variables
-        $error = (object)[
-            'status' => 0,
-            'message' => null
-        ];
-        $attachment = null;
-        $attachment_title = null;
+    // public function send(Request $request): JsonResponse
+    // {
+    //     // default variables
+    //     $error = (object)[
+    //         'status' => 0,
+    //         'message' => null
+    //     ];
+    //     $attachment = null;
+    //     $attachment_title = null;
 
-        // if there is attachment [file]
-        if ($request->hasFile('file')) {
-            // allowed extensions
-            $allowed_images = Chatify::getAllowedImages();
-            $allowed_files  = Chatify::getAllowedFiles();
-            $allowed        = array_merge($allowed_images, $allowed_files);
+    //     // if there is attachment [file]
+    //     if ($request->hasFile('file')) {
+    //         // allowed extensions
+    //         $allowed_images = Chatify::getAllowedImages();
+    //         $allowed_files  = Chatify::getAllowedFiles();
+    //         $allowed        = array_merge($allowed_images, $allowed_files);
 
-            $file = $request->file('file');
-            // check file size
-            if ($file->getSize() < Chatify::getMaxUploadSize()) {
-                if (in_array(strtolower($file->extension()), $allowed)) {
-                    // get attachment name
-                    $attachment_title = $file->getClientOriginalName();
-                    // upload attachment and store the new name
-                    $attachment = Str::uuid() . "." . $file->extension();
-                    $file->storeAs(config('chatify.attachments.folder'), $attachment, config('chatify.storage_disk_name'));
-                } else {
-                    $error->status = 1;
-                    $error->message = "File extension not allowed!";
-                }
+    //         $file = $request->file('file');
+    //         // check file size
+    //         if ($file->getSize() < Chatify::getMaxUploadSize()) {
+    //             if (in_array(strtolower($file->extension()), $allowed)) {
+    //                 // get attachment name
+    //                 $attachment_title = $file->getClientOriginalName();
+    //                 // upload attachment and store the new name
+    //                 $attachment = Str::uuid() . "." . $file->extension();
+    //                 $file->storeAs(config('chatify.attachments.folder'), $attachment, config('chatify.storage_disk_name'));
+    //             } else {
+    //                 $error->status = 1;
+    //                 $error->message = "File extension not allowed!";
+    //             }
+    //         } else {
+    //             $error->status = 1;
+    //             $error->message = "File size you are trying to upload is too large!";
+    //         }
+    //     }
+
+    //     if (!$error->status) {
+    //         // send to database
+    //         $messageText = htmlentities(trim($request['message']), ENT_QUOTES, 'UTF-8');
+    //         $message = Chatify::newMessage([
+    //             'type' => 'user',
+    //             'from_id' => Auth::user()->id,
+    //             'to_id' => $request['user_id'],
+    //             'body' => $messageText,
+    //             'attachment' => ($attachment) ? json_encode((object)[
+    //                 'new_name' => $attachment,
+    //                 'old_name' => htmlentities(trim($attachment_title), ENT_QUOTES, 'UTF-8'),
+    //             ]) : null,
+    //         ]);
+
+    //         // fetch message to send it with the response
+    //         $messageData = Chatify::parseMessage($message);
+
+    //         // send to user using pusher
+    //         if (Auth::user()->id != $request['user_id']) {
+    //             $user = Auth::user();
+    //             $target = User::find($request['user_id']);
+
+    //             Chatify::push("private-chatify.".$request['user_id'], 'messaging', [
+    //                 'from_id' => $user->id,
+    //                 'name'  => $user->name,
+    //                 'avatar' => $user->avatar? url('storage/avatars/'.basename($user->avatar)): null,
+    //                 'to_id' => $request['user_id'],
+    //                 'message' => $messageData
+    //             ]);
+
+    //             $target->notify(new NewChatMessage($user, $messageText, $messageData));
+    //         }
+    //         return $this->success("success", $messageData, self::$responseCode::HTTP_OK);
+    //     }
+
+    //     return $this->error("Error", $error, self::$responseCode::HTTP_UNPROCESSABLE_ENTITY);
+    // }
+
+    public function send(Request $request): JsonResponse 
+{
+    // Default variables
+    $error = (object)[
+        'status' => 0,
+        'message' => null
+    ];
+    $attachment = null;
+    $attachment_title = null;
+
+    // If there is an attachment [file]
+    if ($request->hasFile('file')) {
+        // Allowed extensions
+        $allowed_images = Chatify::getAllowedImages();
+        $allowed_files  = Chatify::getAllowedFiles();
+        $allowed        = array_merge($allowed_images, $allowed_files);
+
+        $file = $request->file('file');
+        // Check file size
+        if ($file->getSize() < Chatify::getMaxUploadSize()) {
+            if (in_array(strtolower($file->extension()), $allowed)) {
+                // Get attachment name
+                $attachment_title = $file->getClientOriginalName();
+                // Upload attachment and store the new name
+                $attachment = Str::uuid() . "." . $file->extension();
+                $file->storeAs(config('chatify.attachments.folder'), $attachment, config('chatify.storage_disk_name'));
             } else {
                 $error->status = 1;
-                $error->message = "File size you are trying to upload is too large!";
+                $error->message = "File extension not allowed!";
             }
+        } else {
+            $error->status = 1;
+            $error->message = "File size you are trying to upload is too large!";
         }
+    }
 
-        if (!$error->status) {
-            // send to database
-            $messageText = htmlentities(trim($request['message']), ENT_QUOTES, 'UTF-8');
-            $message = Chatify::newMessage([
-                'type' => 'user',
-                'from_id' => Auth::user()->id,
+    if (!$error->status) {
+        // Send to database
+        $messageText = htmlentities(trim($request['message']), ENT_QUOTES, 'UTF-8');
+        $message = Chatify::newMessage([
+            'type' => 'user',
+            'from_id' => Auth::user()->id,
+            'to_id' => $request['user_id'],
+            'body' => $messageText,
+            'attachment' => ($attachment) ? json_encode((object)[
+                'new_name' => $attachment,
+                'old_name' => htmlentities(trim($attachment_title), ENT_QUOTES, 'UTF-8'),
+            ]) : null,
+        ]);
+
+        // Fetch message to send it with the response
+        $messageData = Chatify::parseMessage($message);
+
+        // Send to user using Pusher
+        if (Auth::user()->id != $request['user_id']) {
+            $user = Auth::user();
+            $target = User::find($request['user_id']);
+
+            // Pusher notification
+            Chatify::push("private-chatify." . $request['user_id'], 'messaging', [
+                'from_id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->avatar ? url('storage/avatars/' . basename($user->avatar)) : null,
                 'to_id' => $request['user_id'],
-                'body' => $messageText,
-                'attachment' => ($attachment) ? json_encode((object)[
-                    'new_name' => $attachment,
-                    'old_name' => htmlentities(trim($attachment_title), ENT_QUOTES, 'UTF-8'),
-                ]) : null,
+                'message' => $messageData
             ]);
 
-            // fetch message to send it with the response
-            $messageData = Chatify::parseMessage($message);
+            $target->notify(new NewChatMessage($user, $messageText, $messageData));
 
-            // send to user using pusher
-            if (Auth::user()->id != $request['user_id']) {
-                $user = Auth::user();
-                $target = User::find($request['user_id']);
-
-                Chatify::push("private-chatify.".$request['user_id'], 'messaging', [
-                    'from_id' => $user->id,
-                    'name'  => $user->name,
-                    'avatar' => $user->avatar? url('storage/avatars/'.basename($user->avatar)): null,
-                    'to_id' => $request['user_id'],
-                    'message' => $messageData
-                ]);
-
-                $target->notify(new NewChatMessage($user, $messageText, $messageData));
-            }
-            return $this->success("success", $messageData, self::$responseCode::HTTP_OK);
+            // FCM notification
+            $this->sendFcmNotification($target, $messageText, $messageData);
         }
 
-        return $this->error("Error", $error, self::$responseCode::HTTP_UNPROCESSABLE_ENTITY);
+        return $this->success("success", $messageData, self::$responseCode::HTTP_OK);
     }
+
+    return $this->error("Error", $error, self::$responseCode::HTTP_UNPROCESSABLE_ENTITY);
+}
+
+/**
+ * Send FCM notification to the user.
+ *
+ * @param User $target
+ * @param string $messageText
+ * @param array $messageData
+ * @return void
+ */
+private function sendFcmNotification(User $target, string $messageText, array $messageData): void
+{
+    $fcmTokens = $target->fcm_tokens ?? []; // Assuming the user's FCM tokens are stored in an array or JSON format.
+
+    if (!empty($fcmTokens)) {
+        foreach ($fcmTokens as $token) {
+            try {
+                $messaging = app('firebase.messaging'); // Ensure Firebase is properly configured
+                $message = CloudMessage::fromArray([
+                    'token' => $token,
+                    'notification' => [
+                        'title' => 'New Message from ' . Auth::user()->name,
+                        'body' => $messageText,
+                    ],
+                    'data' => [
+                        'from_id' => Auth::user()->id,
+                        'message' => json_encode($messageData),
+                    ],
+                ]);
+                $messaging->send($message);
+            } catch (\Exception $e) {
+                Log::error("Failed to send FCM notification: " . $e->getMessage());
+            }
+        }
+    }
+}
 
 
     /**
