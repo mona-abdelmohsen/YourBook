@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use Illuminate\Support\Facades\DB;
+
 
 class CommentController extends Controller
 {
@@ -376,43 +378,106 @@ class CommentController extends Controller
      * @param $comment_id
      * @return JsonResponse
      */
+    // public function react(Request $request, $post_id, $comment_id): JsonResponse
+    // {
+    //     $validator = Validator::make(array_merge(request()->toArray(), [
+    //         'comment_id' => $comment_id,
+    //         'post_id' => $post_id,
+    //     ]), [
+    //         'reaction' => 'required|string',
+    //         'post_id' => 'required',
+    //         Rule::exists('posts', 'id')
+    //             ->whereNull('deleted_at'),
+    //         'comment_id' => [
+    //             'required',
+    //             Rule::exists('comments', 'id')
+    //                 ->whereNull('deleted_at')
+    //         ]
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return $this->error(
+    //             $validator->errors()->first(),
+    //             $validator->errors(),
+    //             ResponseAlias::HTTP_UNPROCESSABLE_ENTITY
+    //         );
+    //     }
+
+    //     $comment = Comment::find($comment_id);
+
+    //     $reaction = Reaction::firstOrNew(['name' => $request->reaction]);
+
+    //     auth()->user()->reactTo($comment, $reaction);
+
+    //     if ($comment->reacted() && $comment->commenter->id != auth()->id()) {
+    //         // $comment->commenter->notify(new ReactOnMyComment(auth()->user(), $post_id, $comment, $request->reaction));
+    //     }
+
+    //     return $this->success('success', null, self::$responseCode::HTTP_CREATED);
+    // }
+
     public function react(Request $request, $post_id, $comment_id): JsonResponse
-    {
-        $validator = Validator::make(array_merge(request()->toArray(), [
-            'comment_id' => $comment_id,
-            'post_id' => $post_id,
-        ]), [
-            'reaction' => 'required|string',
-            'post_id' => 'required',
-            Rule::exists('posts', 'id')
-                ->whereNull('deleted_at'),
-            'comment_id' => [
-                'required',
-                Rule::exists('comments', 'id')
-                    ->whereNull('deleted_at')
-            ]
-        ]);
+{
+    $validator = Validator::make(array_merge(request()->toArray(), [
+        'comment_id' => $comment_id,
+        'post_id' => $post_id,
+    ]), [
+        'reaction' => 'nullable|string',
+        'post_id' => [
+            'required',
+            Rule::exists('posts', 'id')->whereNull('deleted_at')
+        ],
+        'comment_id' => [
+            'required',
+            Rule::exists('comments', 'id')->whereNull('deleted_at')
+        ]
+    ]);
 
-        if ($validator->fails()) {
-            return $this->error(
-                $validator->errors()->first(),
-                $validator->errors(),
-                ResponseAlias::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+    if ($validator->fails()) {
+        return $this->error(
+            $validator->errors()->first(),
+            $validator->errors(),
+            ResponseAlias::HTTP_UNPROCESSABLE_ENTITY
+        );
+    }
 
-        $comment = Comment::find($comment_id);
+    $comment = Comment::find($comment_id);
+    $user = auth()->user();
 
+    if ($request->filled('reaction') && $request->reaction !== 'none') {
+        // Add reaction
         $reaction = Reaction::firstOrNew(['name' => $request->reaction]);
 
-        auth()->user()->reactTo($comment, $reaction);
+        // Save the reaction
+        $reaction->name = $request->reaction;
+        $reaction->save();
 
-        if ($comment->reacted() && $comment->commenter->id != auth()->id()) {
-            $comment->commenter->notify(new ReactOnMyComment(auth()->user(), $post_id, $comment, $request->reaction));
+        // Attach reaction to the comment
+        $user->reactTo($comment, $reaction);
+
+        if ($comment->reacted() && $comment->commenter->id != $user->id) {
+            $comment->commenter->notify(new ReactOnMyComment($user, $post_id, $comment, $request->reaction));
         }
 
-        return $this->success('success', null, self::$responseCode::HTTP_CREATED);
+        return $this->success('Reaction added successfully', null, self::$responseCode::HTTP_CREATED);
     }
+
+    // Remove reaction if "none" is provided or if there is an existing reaction
+    if ($user->hasReaction($comment) || $request->reaction === 'none') {
+        DB::table('reactables')
+            ->where([
+                'reactable_type' => Comment::class,
+                'reactable_id' => $comment_id,
+                'responder_id' => $user->getKey(),
+                'responder_type' => User::class,
+            ])
+            ->delete();
+
+        return $this->success('Reaction removed successfully', null, self::$responseCode::HTTP_OK);
+    }
+
+    return $this->error('No existing reaction to remove', null, self::$responseCode::HTTP_BAD_REQUEST);
+}
 
 
     public function getReactions($post_id, $comment_id): JsonResponse
