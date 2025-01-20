@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use League\CommonMark\CommonMarkConverter;
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
@@ -114,11 +115,11 @@ class PostController extends Controller
         return $this->error('Cannot react to private post', null, self::$responseCode::HTTP_UNAUTHORIZED);
     }
 
-    if ($request->filled('reaction')) {
+    if ($request->filled('reaction') && $request->reaction !== 'none') {
         // Add reaction - Without mass assignment
         $reaction = Reaction::firstOrNew(['name' => $request->reaction]);
 
-        // Instead of filling the model, directly set the 'name' and save
+        // Set the 'name' and save
         $reaction->name = $request->reaction;
         $reaction->save();
 
@@ -130,16 +131,25 @@ class PostController extends Controller
         }
 
         return $this->success('Reaction added successfully', null, self::$responseCode::HTTP_CREATED);
-    } else {
-        // Remove reaction if no reaction provided
-        if ($user->hasReaction($post)) {        
-            $user->deleteReaction($post);        
-            return $this->success('Reaction removed successfully', null, self::$responseCode::HTTP_OK);
-        }
+    } 
 
-        return $this->error('No existing reaction to remove', null, self::$responseCode::HTTP_BAD_REQUEST);
+    // Remove reaction if "none" is provided or if there is an existing reaction
+    if ($user->hasReaction($post) || $request->reaction === 'none') {
+        DB::table('reactables')
+            ->where([
+                'reactable_type' => Post::class,
+                'reactable_id' => $post_id,
+                'responder_id' => $user->getKey(),
+                'responder_type' => User::class,
+            ])
+            ->delete();
+
+        return $this->success('Reaction removed successfully', null, self::$responseCode::HTTP_OK);
     }
+
+    return $this->error('No existing reaction to remove', null, self::$responseCode::HTTP_BAD_REQUEST);
 }
+
 
 
     /**

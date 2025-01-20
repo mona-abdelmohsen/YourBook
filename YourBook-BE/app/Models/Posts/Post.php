@@ -44,7 +44,7 @@ class Post extends Model implements hasMedia, ReactableInterface
     use Reportable;
     use Reactable;
 
-    protected $table='reactables';
+    protected $table='posts';
     protected $with = ['sharedPost'];
 
     /**
