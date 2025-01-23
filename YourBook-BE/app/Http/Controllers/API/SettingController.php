@@ -63,6 +63,22 @@ class SettingController extends Controller
         }
     }
 
+    // indexing user settings
+    public function index()
+    {
+        $user_id = Auth::id();
+        $settingData = Setting::where('user_id', $user_id)->get(['setting_name', 'setting_value']);
+        if($settingData)
+        {
+            return $this->success('Settings retrieve successfully.', $settingData, 200);
+        }
+        else
+        {
+            return $this->error('You do not have settings',null, 404);
+        }
+
+    }
+
 
     // change password
     public function changePassword(Request $request): JsonResponse

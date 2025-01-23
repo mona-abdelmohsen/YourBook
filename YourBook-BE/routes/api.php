@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function(){
     Route::middleware('auth:api')->group(function(){
         // settings
         Route::post('settings', [SettingController::class, 'store']);
+        Route::get('settings', [SettingController::class, 'index']);
         Route::post('settings/change-password', [SettingController::class, 'changePassword']);
         Route::post('settings/update-profile', [SettingController::class, 'update']);
 
