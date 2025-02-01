@@ -110,5 +110,13 @@ return [
     'user_not_found' => 'لم يتم العثور على المستخدم.',
     'access_denied' => 'تم رفض الوصول.',
     'success' => 'نجاح.',
+
+    // google auth
+    'token_missing' => 'رمز المصادقة مفقود.',
+    'invalid_token' => 'رمز المصادقة غير صالح.',
+    'invalid_issuer' => 'المصدر غير صالح.',
+    'invalid_audience' => 'الجمهور غير صالح.',
+    'token_expired' => 'انتهت صلاحية الرمز.',
+    'default_user_name' => 'مستخدم Google',
     ]
 ];
