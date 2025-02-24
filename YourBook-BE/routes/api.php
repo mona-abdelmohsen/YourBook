@@ -81,6 +81,8 @@ Route::prefix('v1')->group(function(){
         Route::post('/book/store', [\App\Http\Controllers\API\BookController::class, 'store']);
         Route::get('/books', [\App\Http\Controllers\API\BookController::class, 'index']);
         Route::post('/book/{book_id}/media-manager/{mode}', [\App\Http\Controllers\API\BookController::class, 'attachDetachMedia']);
+        Route::delete('book/{book_id}', [\App\Http\Controllers\API\BookController::class, 'destroy']);
+
 
         Route::post('/media/destroy/{media_uuid}', [\App\Http\Controllers\API\MediaController::class, 'destroy']);
         Route::post('/media/upload', [\App\Http\Controllers\API\MediaController::class, 'upload']);

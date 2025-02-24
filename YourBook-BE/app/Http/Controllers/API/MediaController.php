@@ -118,25 +118,86 @@ class MediaController
         return $this->success('Image Uploaded.', $media, self::$responseCode::HTTP_CREATED);
     }
 
+    // private function videoHandler($request, $book = null): JsonResponse
+    // {
+    //     $media = auth()->user()->addMedia($request->file('video'))->toMediaCollection('videos');
+
+    //     if($book){
+    //         $book->mediaFiles()->syncWithoutDetaching([$media->id]);
+    //     }
+
+    //     $media = collect([$media])->map([$this, 'mediaMap'])->keyBy('uuid')->toArray();
+    //     $media = array_values($media);
+    //     return $this->success("Video Uploaded.", $media, self::$responseCode::HTTP_CREATED);
+    // }
+
+    //updated
     private function videoHandler($request, $book = null): JsonResponse
-    {
-        $media = auth()->user()->addMedia($request->file('video'))->toMediaCollection('videos');
-
-        if($book){
-            $book->mediaFiles()->syncWithoutDetaching([$media->id]);
-        }
-
-        $media = collect([$media])->map([$this, 'mediaMap'])->keyBy('uuid')->toArray();
-        $media = array_values($media);
-        return $this->success("Video Uploaded.", $media, self::$responseCode::HTTP_CREATED);
+{
+    if (!$request->hasFile('video')) {
+        Log::error("No video file found in the request.");
+        return response()->json(['error' => 'No video uploaded.'], 400);
     }
+    $media = auth()->user()->addMedia($request->file('video'))
+        ->storingConversionsOnDisk('public') // Ensure it's stored in 'public'
+        ->toMediaCollection('videos', 'public'); // Force storing in 'public'
+    Log::error("Actual Stored Path: " . $media->getPath());
+    
+    
+    
+    if ($book) {
+        $book->mediaFiles()->syncWithoutDetaching([$media->id]);
+    }
+    $videoPath = $media->getPath();
+Log::error("Corrected Video Path: " . $videoPath);
+
+
+    // Generate video thumbnail
+    $thumbnailPath = $this->generateVideoThumbnail($media->getPath(), $media->id);
+
+    // Store the thumbnail URL in media's custom properties
+    $media->setCustomProperty('video_thumbnail', $thumbnailPath);
+    $media->save();
+
+    $media = collect([$media])->map([$this, 'mediaMap'])->keyBy('uuid')->toArray();
+    $media = array_values($media);
+    
+    return $this->success("Video Uploaded.", $media, self::$responseCode::HTTP_CREATED);
+}
+
+private function generateVideoThumbnail($videoPath, $mediaId)
+{
+    // Ensure the path is absolute
+    $fullVideoPath = $videoPath; // Directly use the absolute path
+
+    Log::error("Full Video Path: " . $fullVideoPath);
+
+    $thumbnailName = "thumbnails/video_$mediaId.jpg";
+    $thumbnailPath = storage_path("app/public/$thumbnailName");
+
+    // Ensure storage directory exists
+    if (!file_exists(dirname($thumbnailPath))) {
+        mkdir(dirname($thumbnailPath), 0755, true);
+    }
+
+    // Run the command and log output
+    $command = "ffmpeg -i \"$fullVideoPath\" -ss 00:00:01 -vframes 1 \"$thumbnailPath\" 2>&1";
+    Log::error("Running Command: " . $command);
+    $output = shell_exec($command);
+
+    Log::error("FFmpeg Output: " . $output);
+
+    return asset("storage/$thumbnailName");
+}
+
+
 
     private function audioHandler($request): JsonResponse
     {
         $media = auth()->user()->addMedia($request->file('audio'))->toMediaCollection('audios');
         $media = collect([$media])->map([$this, 'mediaMap'])->keyBy('uuid')->toArray();
         $media = array_values($media);
-        return $this->success("Video Uploaded.", $media, self::$responseCode::HTTP_CREATED);
+        return $this->success("Audio Uploaded.", $media, self::$responseCode::HTTP_CREATED);
     }
 
 
@@ -183,8 +244,7 @@ class MediaController
             'extension' => $media->extension,
             'size' => $media->size,
             'type' => $media->collection_name,
+            'video_thumbnail' => $media->custom_properties['video_thumbnail'],
         ];
-    }
-
-
+}
 }

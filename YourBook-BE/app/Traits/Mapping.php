@@ -232,6 +232,7 @@ trait Mapping
             'type' => $media->collection_name,
             'created_at'    => $media->created_at,
             'collection_name'    => $media->collection_name,
+            'video_thumbnail' => $media->custom_properties['video_thumbnail'],
         ];
     }
 

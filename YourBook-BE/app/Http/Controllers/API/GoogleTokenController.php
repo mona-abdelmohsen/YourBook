@@ -39,15 +39,23 @@ class GoogleTokenController extends Controller
             if ($payload['exp'] < time()) {
                 return $this->error(Lang::has('validation.custom.token_expired') ? Lang::get('validation.custom.token_expired') : 'Token has expired', null, self::$responseCode::HTTP_UNAUTHORIZED);
             }
+            
+            $user = User::withTrashed()->where('email', 'like', '%'.mb_strtolower($payload['email']).'%')->first();
 
-            $user = User::firstOrCreate(
-                ['email' => $payload['email']],
-                [
-                    'name' => $payload['name'] ?? (Lang::has('validation.custom.default_user_name') ? Lang::get('validation.custom.default_user_name') : 'User'),
+            if($user){
+                $user->update([
                     'email_verified_at' => now(),
                     'google_id' => $payload['sub'],
-                ]
-            );
+                    'deleted_at' => null,
+                ]);
+            }else{
+                $user = User::create([
+                    'name' => $payload['name'] ?? (Lang::has('validation.custom.default_user_name') ? Lang::get('validation.custom.default_user_name') : 'User'),    
+                    'email' => $payload['email'],
+                    'email_verified_at' => now(),
+                    'google_id' => $payload['sub'],
+                ]);
+            }
 
             $tokenResult = $user->createToken('GoogleLoginToken');
             $accessToken = $tokenResult->accessToken;
@@ -64,3 +72,4 @@ class GoogleTokenController extends Controller
         }
     }
 }
+
