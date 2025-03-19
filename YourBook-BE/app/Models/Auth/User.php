@@ -49,12 +49,12 @@ class User extends Authenticatable implements  MustVerifyEmail, MustVerifyMobile
     use Reacts;
     use Commenter;
     use Reportable;
-    use SoftDeletes;
+    // use SoftDeletes;
     use Reacts;
 
-    protected $dates = ['deleted_at'];
+    // protected $dates = ['deleted_at'];
 
-
+    
     /** FriendShip Management  */
     use Friendable;
     use CanFollow, CanBeFollowed;
@@ -75,6 +75,7 @@ class User extends Authenticatable implements  MustVerifyEmail, MustVerifyMobile
         'country_code', 'country_id',
         'privacy',
         'about', 'birth_date', 'fcm_token',
+        'enable'
 
     ];
 
@@ -97,6 +98,7 @@ class User extends Authenticatable implements  MustVerifyEmail, MustVerifyMobile
         'email_verified_at' => 'datetime',
         'email_last_attempt_date' => 'datetime',
         'email_verify_code_sent_at' => 'datetime',
+        'enable' => 'boolean',
 
     ];
 

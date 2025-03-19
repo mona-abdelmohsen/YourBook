@@ -232,8 +232,11 @@ trait Mapping
             'type' => $media->collection_name,
             'created_at'    => $media->created_at,
             'collection_name'    => $media->collection_name,
-            'video_thumbnail' => $media->custom_properties['video_thumbnail'],
+            'video_thumbnail' => $media->custom_properties['video_thumbnail'] ?? null,
         ];
     }
 
 }
+this file changed after install and use ffmpeg local
+
+there is any thing that prevent use ffmpeg -y in the server after upload the content of file above

@@ -230,40 +230,38 @@ class AuthController extends Controller
 
     // disable users
     public function disableUser($user_id)
-{
-    $user = User::findOrFail($user_id);
-    $admin = Admin::find(Auth::id());
+    {
+        $user = User::findOrFail($user_id);
+        $admin = Admin::find(Auth::id());
     
-    if (!$admin) {
-        return $this->error('You are not authorized to delete a user.', null, 403);
+        if (!$admin) {
+            return $this->error('You are not authorized to disable a user.', null, 403);
+        }
+    
+        if ($user->enable) { 
+            $user->update(['enable' => false]); // Disable the user instead of deleting
+            return $this->success('User account successfully disabled.', null, 200);
+        }
+    
+        return $this->error('User is already disabled.', null, 400);
     }
-
-    if ($user) {
-        $user->delete(); 
-        return $this->success('User account successfully deleted.', null, 200);
-    }
-
-    return $this->error('User not found.', null, 404);
-}
-
-    // enable user
+    
+    // Enable user
     public function enableUser($user_id)
-{
-    $admin = Admin::find(Auth::id()); 
-
-    if (!$admin) {
-        return $this->error('You are not authorized to restore a user.', null, 403);
+    {
+        $admin = Admin::find(Auth::id()); 
+    
+        if (!$admin) {
+            return $this->error('You are not authorized to enable a user.', null, 403);
+        }
+    
+        $user = User::find($user_id);
+    
+        if ($user && !$user->enable) { 
+            $user->update(['enable' => true]); // Enable the user
+            return $this->success('User account successfully enabled.', null, 200);
+        }
+    
+        return $this->error('User not found or already enabled.', null, 404);
     }
-
-    $user = User::withTrashed()->find($user_id); 
-
-    if ($user && $user->trashed()) {
-        $user->restore(); 
-        return $this->success('User account successfully restored.', null, 200);
-    }
-
-    return $this->error('User not found or not deleted.', null, 404);
-}
-
-
 }

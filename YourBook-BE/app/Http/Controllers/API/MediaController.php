@@ -244,7 +244,7 @@ private function generateVideoThumbnail($videoPath, $mediaId)
             'extension' => $media->extension,
             'size' => $media->size,
             'type' => $media->collection_name,
-            'video_thumbnail' => $media->custom_properties['video_thumbnail'],
+            'video_thumbnail' => $media->custom_properties['video_thumbnail'] ?? null,
         ];
 }
 }
