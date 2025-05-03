@@ -19,7 +19,8 @@ use Illuminate\Support\Str;
 use Pusher\Pusher;
 use Pusher\PusherException;
 use Kreait\Firebase\Messaging\CloudMessage; 
-use Illuminate\Support\Facades\Log;      
+use Illuminate\Support\Facades\Log;  
+    
 
 
 class ChatController extends Controller
@@ -339,39 +340,45 @@ private function sendFcmNotification(User $target, string $messageText, array $m
      * @param Request $request
      * @return JsonResponse
      */
-    public function getContacts(Request $request): JsonResponse
-    {
-        // get all users that received/sent message from/to [Auth user]
-        $users = Message::join('users', function ($join) {
+    
+
+public function getContacts(Request $request): JsonResponse
+{
+    $authId = Auth::user()->id;
+
+    $users = Message::join('users', function ($join) {
             $join->on('ch_messages.from_id', '=', 'users.id')
-                ->orOn('ch_messages.to_id', '=', 'users.id');
+                 ->orOn('ch_messages.to_id', '=', 'users.id');
         })
-            ->where(function ($q) {
-                $q->where('ch_messages.from_id', Auth::user()->id)
-                    ->orWhere('ch_messages.to_id', Auth::user()->id);
-            })
-            ->where('users.id', '!=', Auth::user()->id)
-            ->select([
-                'users.*',
-                DB::raw('MAX(ch_messages.created_at) as max_created_at'),
-                DB::raw('SUM(CASE WHEN ch_messages.seen = 0 AND ch_messages.to_id = ' . Auth::user()->id . ' THEN 1 ELSE 0 END) as unseen_count'),
-                DB::raw('(SELECT body FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . Auth::user()->id . ' OR m.to_id = ' . Auth::user()->id . ') ORDER BY m.created_at DESC LIMIT 1) as body'),
-                DB::raw('(SELECT attachment FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . Auth::user()->id . ' OR m.to_id = ' . Auth::user()->id . ') ORDER BY m.created_at DESC LIMIT 1) as attachment'),
-                DB::raw('(SELECT seen FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . Auth::user()->id . ' OR m.to_id = ' . Auth::user()->id . ') ORDER BY m.created_at DESC LIMIT 1) as seen'),
-                DB::raw('(SELECT from_id FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . Auth::user()->id . ' OR m.to_id = ' . Auth::user()->id . ') ORDER BY m.created_at DESC LIMIT 1) as from_id'),
-            ])
-            ->groupBy('users.id')
-            ->orderBy('max_created_at', 'desc')
-            ->paginate($request->per_page ?? $this->perPage);
+        ->where(function ($q) use ($authId) {
+            $q->where('ch_messages.from_id', $authId)
+              ->orWhere('ch_messages.to_id', $authId);
+        })
+        ->where('users.id', '!=', $authId)
+        ->select([
+            'users.*',
+            DB::raw('MAX(ch_messages.created_at) as max_created_at'),
+            DB::raw('SUM(CASE WHEN ch_messages.seen = 0 AND ch_messages.to_id = ' . $authId . ' THEN 1 ELSE 0 END) as unseen_count'),
+            DB::raw('(SELECT body FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . $authId . ' OR m.to_id = ' . $authId . ') ORDER BY m.created_at DESC LIMIT 1) as body'),
+            DB::raw('(SELECT attachment FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . $authId . ' OR m.to_id = ' . $authId . ') ORDER BY m.created_at DESC LIMIT 1) as attachment'),
+            DB::raw('(SELECT seen FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . $authId . ' OR m.to_id = ' . $authId . ') ORDER BY m.created_at DESC LIMIT 1) as seen'),
+            DB::raw('(SELECT from_id FROM ch_messages m WHERE (m.from_id = users.id OR m.to_id = users.id) AND (m.from_id = ' . $authId . ' OR m.to_id = ' . $authId . ') ORDER BY m.created_at DESC LIMIT 1) as from_id'),
+            DB::raw('EXISTS (SELECT 1 FROM ch_favorites f WHERE f.user_id = ' . $authId . ' AND f.favorite_id = users.id) as isUserStared'),
+        ])
+        ->groupBy('users.id')
+        ->orderBy('max_created_at', 'desc')
+        ->paginate($request->per_page ? $this->perPage : 10);
 
-        $users->transform([$this, 'contactUserMap']);
+    $users->transform([$this, 'contactUserMap']);
 
-        return $this->success('success', [
-            'contacts' => $users->items(),
-            'total' => $users->total() ?? 0,
-            'last_page' => $users->lastPage() ?? 1,
-        ], self::$responseCode::HTTP_OK);
-    }
+    return $this->success('success', [
+        'contacts' => $users->items(),
+        'total' => $users->total() ?? 0,
+        'last_page' => $users->lastPage() ?? 1,
+    ], self::$responseCode::HTTP_OK);
+}
+
+
 
     /**
      * @param Request $request
@@ -386,26 +393,71 @@ private function sendFcmNotification(User $target, string $messageText, array $m
         ], self::$responseCode::HTTP_OK);
     }
 
-    public function sharedPhotos(Request $request): JsonResponse
-    {
-        $images = array(); // Default
-        // Get messages
-        $msgs = Chatify::fetchMessagesQuery($request['user_id'])
-            ->orderBy('created_at', 'DESC')
-            ->whereNotNull('attachment')->select('attachment')
-            ->paginate($request->per_page ?? $this->perPage);
-        $msgs->map([$this, 'messageMap']);
-        $msgs->transform(function($msg){
-            return $msg->attachment;
-        });
+    // public function sharedPhotos(Request $request): JsonResponse
+    // {
+    //     $images = array(); // Default
+    //     // Get messages
+    //     $msgs = Chatify::fetchMessagesQuery($request['user_id'])
+    //         ->orderBy('created_at', 'DESC')
+    //         ->whereNotNull('attachment')->select('attachment')
+    //         ->paginate($request->per_page ?? $this->perPage);
+    //     $msgs->map([$this, 'messageMap']);
+    //     $msgs->transform(function($msg){
+    //         return $msg->attachment;
+    //     });
 
-        // send the response
-        return $this->success('success', [
-            'files' => $msgs->items(),
-            'total' => $msgs->total() ?? 0,
-            'last_page' => $msgs->lastPage() ?? 1,
-        ], self::$responseCode::HTTP_OK);
-    }
+    //     // send the response
+    //     return $this->success('success', [
+    //         'files' => $msgs->items(),
+    //         'total' => $msgs->total() ?? 0,
+    //         'last_page' => $msgs->lastPage() ?? 1,
+    //     ], self::$responseCode::HTTP_OK);
+    // }
+
+    // new
+    public function sharedPhotos(Request $request): JsonResponse 
+{
+    // Get allowed types
+    $allowedImages = Chatify::getAllowedImages();
+    $allowedVideos = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+    // $allowedFiles  = Chatify::getAllowedFiles();   // all allowed, includes audio too
+
+    // Get messages with attachments
+    $msgs = Chatify::fetchMessagesQuery($request['user_id'])
+        ->orderBy('created_at', 'DESC')
+        ->whereNotNull('attachment')
+        ->select('attachment')
+        ->paginate($request->per_page ?? $this->perPage);
+
+    $filtered = $msgs->map(function ($msg) use ($allowedImages, $allowedVideos) {
+        $attachmentObj = json_decode($msg->attachment);
+        if (!$attachmentObj || empty($attachmentObj->new_name)) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo($attachmentObj->new_name, PATHINFO_EXTENSION));
+
+        // Exclude audio types
+        $audioTypes = ['mp3', 'wav', 'm4a', 'aac', 'ogg'];
+        if (in_array($ext, $audioTypes)) {
+            return null;
+        }
+
+        // Only allow images, videos, or general files
+        if (in_array($ext, array_merge($allowedImages, $allowedVideos))) {
+            return $this->messageMap($msg)->attachment;
+        }
+
+        return null;
+    })->filter()->values();
+
+    // Send the response
+    return $this->success('success', [
+        'files' => $filtered,
+        'total' => $msgs->total() ?? 0,
+        'last_page' => $msgs->lastPage() ?? 1,
+    ], self::$responseCode::HTTP_OK);
+}
 
     /**
      * @param Request $request
@@ -433,16 +485,61 @@ private function sendFcmNotification(User $target, string $messageText, array $m
      * @param Request $request
      * @return JsonResponse
      */
-    public function getFavorites(Request $request)
-    {
-        $favorites = Favorite::where('user_id', Auth::user()->id)
-            ->join('users', 'users.id', 'ch_favorites.favorite_id')
-            ->select('users.*')
-            ->get()->map([$this, 'userMap']);
+//     public function getFavorites(Request $request)
+//     {
+//         $favorites = Favorite::where('user_id', Auth::user()->id)
+//             ->join('users', 'users.id', 'ch_favorites.favorite_id')
+//             ->select('users.*')
+//             ->get()->map([$this, 'userMap']);
 
-        return $this->success('success', [
-            'total' => count($favorites),
-            'favorites' => $favorites ?? [],
-        ], self::$responseCode::HTTP_OK);
-    }
+//         return $this->success('success', [
+//             'total' => count($favorites),
+//             'favorites' => $favorites ?? [],
+//         ], self::$responseCode::HTTP_OK);
+//     }
+
+// new 
+public function getFavorites(Request $request)
+{
+    $favorites = Favorite::where('ch_favorites.user_id', Auth::id())
+        ->join('users', 'users.id', '=', 'ch_favorites.favorite_id')
+        ->select('users.*',
+            DB::raw('MAX(ch_messages.created_at) as max_created_at'),
+            DB::raw('(SELECT body FROM ch_messages m 
+                WHERE (m.from_id = users.id OR m.to_id = users.id) 
+                  AND (m.from_id = ' . Auth::id() . ' OR m.to_id = ' . Auth::id() . ') 
+                ORDER BY m.created_at DESC LIMIT 1) as body'),
+            DB::raw('(SELECT attachment FROM ch_messages m 
+                WHERE (m.from_id = users.id OR m.to_id = users.id) 
+                  AND (m.from_id = ' . Auth::id() . ' OR m.to_id = ' . Auth::id() . ') 
+                ORDER BY m.created_at DESC LIMIT 1) as attachment'),
+            DB::raw('(SELECT seen FROM ch_messages m 
+                WHERE (m.from_id = users.id OR m.to_id = users.id) 
+                  AND (m.from_id = ' . Auth::id() . ' OR m.to_id = ' . Auth::id() . ') 
+                ORDER BY m.created_at DESC LIMIT 1) as seen'),
+            DB::raw('(SELECT from_id FROM ch_messages m 
+                WHERE (m.from_id = users.id OR m.to_id = users.id) 
+                  AND (m.from_id = ' . Auth::id() . ' OR m.to_id = ' . Auth::id() . ') 
+                ORDER BY m.created_at DESC LIMIT 1) as from_id')
+        )
+        ->leftJoin('ch_messages', function ($join) {
+            $join->on('ch_messages.from_id', '=', 'users.id')
+                 ->orOn('ch_messages.to_id', '=', 'users.id');
+        })
+        ->where('users.id', '!=', Auth::id())
+        ->groupBy('users.id')
+        ->orderByDesc('max_created_at')
+        ->paginate($request->per_page ? $this->perPage : 10);
+
+    // ✅ Apply transformation to the paginator's items
+    $favorites->getCollection()->transform([$this, 'contactUserMap']);
+
+    return $this->success('success', [
+        'total' => $favorites->total(),
+        'favorites' => $favorites->items(),
+        'last_page' => $favorites->lastPage(),
+    ], self::$responseCode::HTTP_OK);
+}
+
+
 }

@@ -30,7 +30,7 @@ class Story extends Model implements HasMedia, ReactableInterface
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id', 'content', 'privacy', 'background_color',
+        'user_id', 'content', 'privacy', 'background_color', 'content_background',
     ];
 
     protected $casts = [

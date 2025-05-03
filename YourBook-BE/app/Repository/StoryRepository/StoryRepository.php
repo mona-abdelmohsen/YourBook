@@ -11,27 +11,51 @@ class StoryRepository implements StoryRepositoryInterface
 {
     use Mapping;
 
-    public function getStory($story_id): mixed
-    {
-        return $this->getStories(story_id: $story_id)->first();
+    // public function getStory($story_id): mixed
+    // {
+    //     return $this->getStories(story_id: $story_id)->first();
+    // }
+
+    // public function getStories($user_id = null, $story_id = null): mixed
+    // {
+    //     $story = Story::with([
+    //         'media', 'user', 'views',
+    //     ])->where([
+    //         'user_id'   => $user_id ?? auth()->id(),
+    //     ])->when($story_id, fn($query) => $query->where('id', $story_id));
+
+    //     if($story_id){
+    //         return $story->get()->map([$this, 'storyMap']);
+    //     }
+
+    //     $story = $story->paginate(20);
+    //     $story->getCollection()->transform([$this, 'storyMap']);
+
+    //     return $story;
+    // }
+
+
+    public function getStory($story_id): ?Story
+{
+    return Story::with(['media', 'user', 'views'])->find($story_id);
+}
+
+public function getStories($user_id = null, $story_id = null): mixed
+{
+    $query = Story::with([
+        'media', 'user', 'views',
+    ])->when($user_id, fn($q) => $q->where('user_id', $user_id))
+      ->when($story_id, fn($q) => $q->where('id', $story_id));
+
+    if ($story_id) {
+        return $query->get(); // return collection of models (not mapped)
     }
 
-    public function getStories($user_id = null, $story_id = null): mixed
-    {
-        $story = Story::with([
-            'media', 'user', 'views',
-        ])->where([
-            'user_id'   => $user_id ?? auth()->id(),
-        ])->when($story_id, fn($query) => $query->where('id', $story_id));
+    $paginated = $query->paginate(20);
+    $paginated->getCollection()->transform([$this, 'storyMap']);
 
-        if($story_id){
-            return $story->get()->map([$this, 'storyMap']);
-        }
+    return $paginated;
+}
 
-        $story = $story->paginate(20);
-        $story->getCollection()->transform([$this, 'storyMap']);
-
-        return $story;
-    }
 
 }

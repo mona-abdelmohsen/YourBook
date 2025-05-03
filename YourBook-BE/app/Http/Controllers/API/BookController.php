@@ -104,7 +104,7 @@ class BookController extends Controller
         $validator = Validator::make($request->toArray(), [
             'title' => 'required|string',
             'description' => 'nullable|string|max:10000',
-            'privacy' => 'required|string|in:public,private,friend',
+            'privacy' => 'required|string|in:public,private,friends',
             'category_id' => 'nullable|exists:user_categories,id',
             'parent_id' => 'nullable|exists:books,id',
         ]);

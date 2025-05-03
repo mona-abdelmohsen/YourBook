@@ -20,6 +20,7 @@ class FriendshipController extends Controller
 {
 
     use ApiResponse;
+    protected int $perPage = 10;
 
     private function getAuthUser()
     {
@@ -175,6 +176,37 @@ class FriendshipController extends Controller
         return $this->success('success', null, self::$responseCode::HTTP_OK);
     }
 
+    // sender user can remove freiend request
+    public function removeFriendRequest($other_user_id): JsonResponse 
+{
+    $this->validateUserId($other_user_id);
+
+    $authUser = $this->getAuthUser();
+    $otherUser = $this->getUser($other_user_id);
+
+    // Check if auth user has received a friend request from the other user
+    if ($authUser->hasFriendRequestFrom($otherUser)) {
+        $authUser->denyFriendRequest($otherUser);
+
+        return $this->success('Friend request denied successfully.', null, self::$responseCode::HTTP_OK);
+    }
+
+    // Check if auth user has sent a friend request to the other user
+    if ($authUser->hasSentFriendRequestTo($otherUser)) {
+        $authUser->cancelFriendRequest($otherUser);
+
+        return $this->success('Friend request canceled successfully.', null, self::$responseCode::HTTP_OK);
+    }
+
+    // If neither, return error
+    return $this->error(
+        'No friend request exists between you and this user.',
+        null,
+        self::$responseCode::HTTP_UNAUTHORIZED
+    );
+}
+
+
 
     /**
      * @param $user_id
@@ -281,92 +313,152 @@ class FriendshipController extends Controller
 
 
     // get follow list
-    public function getFollowersList($user_id): JsonResponse
-    {
-        // Validate the provided user_id
-        $this->validateUserId($user_id);
+    // public function getFollowersList($user_id): JsonResponse
+    // {
+    //     // Validate the provided user_id
+    //     $this->validateUserId($user_id);
 
-        // Get the authenticated user
-        $authUser = auth()->user();
+    //     // Get the authenticated user
+    //     $authUser = auth()->user();
 
-        // Find the user whose followers list is being requested
-        $user = User::find($user_id);
+    //     // Find the user whose followers list is being requested
+    //     $user = User::find($user_id);
 
-        // Check if the user exists
-        if (!$user) {
-            return $this->error('User not found.', null, ResponseAlias::HTTP_NOT_FOUND);
-        }
+    //     // Check if the user exists
+    //     if (!$user) {
+    //         return $this->error('User not found.', null, ResponseAlias::HTTP_NOT_FOUND);
+    //     }
 
-        // Check if the authenticated user is requesting their own followings
-        if ($authUser->id == $user_id) {
-            $followings = $authUser->followings()->get();
-        } else {
-            // If a follow list setting exists, check the value and apply follow list settings
-            $followListSetting = $user->settings()->where('setting_name', SettingName::FollowList->value)->first();
+    //     // Check if the authenticated user is requesting their own followings
+    //     if ($authUser->id == $user_id) {
+    //         $followings = $authUser->followings()->get();
+    //     } else {
+    //         // If a follow list setting exists, check the value and apply follow list settings
+    //         $followListSetting = $user->settings()->where('setting_name', SettingName::FollowList->value)->first();
 
-            if ($followListSetting) {
-                switch ($followListSetting->setting_value) {
-                    case SettingValue::OnlyMe->value:
-                        if ($authUser->id !== $user->id) {
-                            return $this->error(
-                                'This user only allows themselves to view their followers list.',
-                                null,
-                                ResponseAlias::HTTP_UNAUTHORIZED
-                            );
-                        }
-                        break;
+    //         if ($followListSetting) {
+    //             switch ($followListSetting->setting_value) {
+    //                 case SettingValue::OnlyMe->value:
+    //                     if ($authUser->id !== $user->id) {
+    //                         return $this->error(
+    //                             'This user only allows themselves to view their followers list.',
+    //                             null,
+    //                             ResponseAlias::HTTP_UNAUTHORIZED
+    //                         );
+    //                     }
+    //                     break;
 
-                    case SettingValue::MyFriends->value:
-                        if (!$user->isFriendWith($authUser)) {
-                            return $this->error(
-                                'This user only allows friends to view their followers list.',
-                                null,
-                                ResponseAlias::HTTP_UNAUTHORIZED
-                            );
-                        }
-                        break;
+    //                 case SettingValue::MyFriends->value:
+    //                     if (!$user->isFriendWith($authUser)) {
+    //                         return $this->error(
+    //                             'This user only allows friends to view their followers list.',
+    //                             null,
+    //                             ResponseAlias::HTTP_UNAUTHORIZED
+    //                         );
+    //                     }
+    //                     break;
 
-                    case SettingValue::FriendsOfFriends->value:
-                        if (!$user->isFriendOfFriend($authUser)) {
-                            return $this->error(
-                                'This user only allows friends of friends to view their followers list.',
-                                null,
-                                ResponseAlias::HTTP_UNAUTHORIZED
-                            );
-                        }
-                        break;
+    //                 case SettingValue::FriendsOfFriends->value:
+    //                     if (!$user->isFriendOfFriend($authUser)) {
+    //                         return $this->error(
+    //                             'This user only allows friends of friends to view their followers list.',
+    //                             null,
+    //                             ResponseAlias::HTTP_UNAUTHORIZED
+    //                         );
+    //                     }
+    //                     break;
 
-                    case SettingValue::All->value:
-                        // If the setting is "All", anyone can view the follow list
-                        break;
+    //                 case SettingValue::All->value:
+    //                     // If the setting is "All", anyone can view the follow list
+    //                     break;
 
-                    default:
-                        return $this->error(
-                            'Invalid follow list setting value.',
-                            null,
-                            ResponseAlias::HTTP_BAD_REQUEST
-                        );
-                }
-            }
+    //                 default:
+    //                     return $this->error(
+    //                         'Invalid follow list setting value.',
+    //                         null,
+    //                         ResponseAlias::HTTP_BAD_REQUEST
+    //                     );
+    //             }
+    //         }
 
-            $followings = $user->followings()->get();
-        }
+    //         $followings = $user->followings()->get();
+    //     }
 
-        // If the followings list is empty
-        if ($followings->isEmpty()) {
-            return $this->success(
-                'You are not following anyone.',
-                $followings,
-                ResponseAlias::HTTP_OK
-            );
-        }
+    //     // If the followings list is empty
+    //     if ($followings->isEmpty()) {
+    //         return $this->success(
+    //             'You are not following anyone.',
+    //             $followings,
+    //             ResponseAlias::HTTP_OK
+    //         );
+    //     }
 
-        return $this->success(
-            'Followings list retrieved successfully.',
-            $followings,
-            ResponseAlias::HTTP_OK
-        );
+    //     return $this->success(
+    //         'Followings list retrieved successfully.',
+    //         $followings,
+    //         ResponseAlias::HTTP_OK
+    //     );
+    // }
+
+    // new get follow list paginated
+    public function getFollowersList(Request $request, $user_id): JsonResponse
+{
+    // Validate the provided user_id
+    $this->validateUserId($user_id);
+
+    $authUser = auth()->user();
+    $user = User::find($user_id);
+
+    if (!$user) {
+        return $this->error('User not found.', null, ResponseAlias::HTTP_NOT_FOUND);
     }
+
+    // Determine if follow list can be viewed
+    if ($authUser->id != $user_id) {
+        $followListSetting = $user->settings()->where('setting_name', SettingName::FollowList->value)->first();
+
+        if ($followListSetting) {
+            switch ($followListSetting->setting_value) {
+                case SettingValue::OnlyMe->value:
+                    return $this->error('This user only allows themselves to view their followers list.', null, ResponseAlias::HTTP_UNAUTHORIZED);
+                case SettingValue::MyFriends->value:
+                    if (!$user->isFriendWith($authUser)) {
+                        return $this->error('This user only allows friends to view their followers list.', null, ResponseAlias::HTTP_UNAUTHORIZED);
+                    }
+                    break;
+                case SettingValue::FriendsOfFriends->value:
+                    if (!$user->isFriendOfFriend($authUser)) {
+                        return $this->error('This user only allows friends of friends to view their followers list.', null, ResponseAlias::HTTP_UNAUTHORIZED);
+                    }
+                    break;
+                case SettingValue::All->value:
+                    break;
+                default:
+                    return $this->error('Invalid follow list setting value.', null, ResponseAlias::HTTP_BAD_REQUEST);
+            }
+        }
+    }
+
+    // Get followings paginated
+    $followings = $user->followings()
+        ->orderBy('users.created_at', 'desc') // optional sorting
+        ->paginate($request->per_page ?? $this->perPage);
+
+    if ($followings->isEmpty()) {
+        return $this->success('You are not following anyone.', [
+            'followers' => [],
+            'total' => 0,
+            'last_page' => 1,
+        ], ResponseAlias::HTTP_OK);
+    }
+
+    return $this->success('Followings list retrieved successfully.', [
+        'followers' => $followings->items(),
+        'total' => $followings->total(),
+        'last_page' => $followings->lastPage(),
+    ], ResponseAlias::HTTP_OK);
+}
+
 
 
     //get friends of user_id

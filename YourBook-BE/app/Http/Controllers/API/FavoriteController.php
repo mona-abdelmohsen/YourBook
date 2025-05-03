@@ -110,13 +110,22 @@ private function handleItemType($item_type, $user, $postRepository)
                 return $bookData;
             });
 
+            // return $this->success('Returning favorite books.', [
+            //     'books' => $responseData,
+            //     'pagination' => [
+            //         'total' => $data->total(),
+            //         'per_page' => $data->perPage(),
+            //         'current_page' => $data->currentPage(),
+            //     ]
+            // ], self::$responseCode::HTTP_OK);
             return $this->success('Returning favorite books.', [
-                'books' => $responseData,
-                'pagination' => [
-                    'total' => $data->total(),
-                    'per_page' => $data->perPage(),
-                    'current_page' => $data->currentPage(),
-                ]
+                $paginatedTransformedData = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $responseData,
+                    $data->total(),
+                    $data->perPage(),
+                    $data->currentPage(),
+                    ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+                )
             ], self::$responseCode::HTTP_OK);
 
         default:

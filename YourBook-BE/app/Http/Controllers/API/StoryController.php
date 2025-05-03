@@ -11,7 +11,7 @@ use App\Notifications\ReactOnMyStory;
 use App\Repository\PostRepositoryInterface;
 use App\Repository\StoryRepositoryInterface;
 use App\Traits\ApiResponse;
-use App\Traits\Mapping;
+use App\Traits\Mapping; 
 use App\Traits\MediaHelper;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Database\Eloquent\Casts\Json;
@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Support\Facades\Log;
 
 class StoryController extends Controller
 {
@@ -27,16 +29,22 @@ class StoryController extends Controller
 
     public function store(Request $request, StoryRepositoryInterface $storyRepository): JsonResponse
     {
+        try{
         $validator = Validator::make(request()->toArray(), [
-            'content'   => 'required_without_all:images,videos,audios',
+            // 'content'   => 'required_without_all:images,videos,audios',
+            'content'   => 'nullable',
             'privacy'   => [
                 'required',
                 Rule::enum(PrivacyEnum::class),
             ],
             'images.*'     => 'image|max:'.env('MAX_UPLOAD_FILE_SIZE'),
 //            'videos.*'     => 'video|duration_max:'.env('MAX_VIDEO_FILE_DURATION').'|max:'.env('MAX_UPLOAD_FILE_SIZE'),
-            'videos.*'     => 'nullable',
-            'audios.*'       => 'nullable',
+            'videos.*' => 'nullable|video|max:4096',  // 4096 KB = 4 MB
+            // 'videos.*' => 'nullable|mimes:mp4,avi,mov|max:512000',  // 4096 KB = 4 MB
+
+            // 'audios.*'       => 'nullable',
+            'audios.*' => 'nullable|file|mimetypes:audio/mpeg,audio/mp4,audio/x-wav,audio/x-m4a,audio/ogg,audio/webm|max:10240',
+
             'content_background'    => 'nullable|string',
         ]);
 
@@ -68,6 +76,12 @@ class StoryController extends Controller
         }
 
         return $this->success("success", $storyRepository->getStory($story->id), self::$responseCode::HTTP_OK);
+    } catch (PostTooLargeException $e) {
+        // Custom error message for large file uploads
+        return $this->error('The uploaded file is too large. Please upload a smaller file.',
+            [],
+            ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+    }
     }
 
     /**
@@ -76,7 +90,7 @@ class StoryController extends Controller
      */
     public function index(StoryRepositoryInterface $storyRepository): JsonResponse
     {
-        $user_id = request()->user_id;
+        $user_id = auth()->id();
         return $this->success('success', $storyRepository->getStories(user_id: $user_id), self::$responseCode::HTTP_OK);
     }
 
@@ -87,11 +101,48 @@ class StoryController extends Controller
      * @return JsonResponse
      */
     public function show($story_id, StoryRepositoryInterface $storyRepository): JsonResponse
-    {
-        $story = $storyRepository->getStories(story_id: $story_id);
-        return $this->success('success', $story, self::$responseCode::HTTP_OK);
-    }
+{
+    // $story = $storyRepository->getStories(story_id: $story_id)->first();
+    $story = $storyRepository->getStory($story_id);
 
+    $authUser = auth()->user();
+    
+    // Ensure the story exists
+    if (!$story) {
+        return $this->error('Story not found', null, 404);
+    }
+    
+    // Fetch the user who owns the story
+    $storyAuth = User::find($story['user_id']); 
+    
+    // Check the story privacy and whether the authenticated user has access
+    Log::info('story', [$story->privacy]);
+    switch ($story->privacy->value) {
+        case PrivacyEnum::PUBLIC->value:
+            return $this->success('Success', $story, self::$responseCode::HTTP_OK);
+        
+        case PrivacyEnum::PRIVATE->value:
+            if($story['user_id'] == auth()->id())
+            {
+                return $this->success('Success', $story, self::$responseCode::HTTP_OK);
+            }
+            return $this->error('This story is private, You cannot show it', null, 403);
+        
+        case PrivacyEnum::FRIENDS->value:
+            if ($storyAuth->isFriendWith($authUser)) {
+                return $this->success('Success', $story, self::$responseCode::HTTP_OK);
+            }
+            if($story['user_id'] == auth()->id())
+            {
+                return $this->success('Success', $story, self::$responseCode::HTTP_OK);
+            }
+            return $this->error('This story appears only for friends, You cannot show it', null, 403);
+        
+        default:
+            return $this->error('Invalid privacy setting', null, 400);
+    }
+    
+}
 
     public function react(Request $request, $story_id): JsonResponse
     {

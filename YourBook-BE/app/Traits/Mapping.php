@@ -8,6 +8,7 @@ use App\Models\Posts\Comment;
 use App\Models\Posts\Post;
 use App\Models\Stories\Story;
 use Chatify\Facades\ChatifyMessenger as Chatify;
+use Illuminate\Support\Facades\DB;
 
 trait Mapping
 {
@@ -29,7 +30,24 @@ trait Mapping
             $attachment = $attachmentOBJ->new_name;
             $attachment_title = htmlentities(trim($attachmentOBJ->old_name), ENT_QUOTES, 'UTF-8');
             $ext = pathinfo($attachment, PATHINFO_EXTENSION);
-            $attachment_type = in_array($ext, Chatify::getAllowedImages()) ? 'image' : 'file';
+            // $attachment_type = in_array($ext, Chatify::getAllowedImages()) ? 'image' : 'file';
+              $ext = strtolower(pathinfo($attachment, PATHINFO_EXTENSION));
+
+        // Define allowed types
+        $imageExts = ['png','jpg','jpeg','gif', 'svg', 'webp', 'bmp', 'ico', 'tif', 'tiff'];
+        $videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+        $audioExts = ['mp3', 'wav', 'm4a', 'aac', 'ogg'];
+
+        // Determine type
+        if (in_array($ext, $imageExts)) {
+            $attachment_type = 'image';
+        } elseif (in_array($ext, $videoExts)) {
+            $attachment_type = 'video';
+        } elseif (in_array($ext, $audioExts)) {
+            $attachment_type = 'record';
+        } else {
+            $attachment_type = 'file'; // fallback
+        }
             $path = config('chatify.attachments.folder') . '/' . $attachment;
             $item->attachment = [
                 'file'      => $attachment,
@@ -45,6 +63,7 @@ trait Mapping
     {
         $message = $this->messageMap($item);
         $data = $this->userMap($item);
+        
         return [
             ...$data,
             'messages_details'  => [
@@ -60,6 +79,13 @@ trait Mapping
 
     public function userMap($item): array
     {
+        $authId = auth()->id();
+
+    // Check if the user is starred (i.e., exists in ch_favorites)
+    $isStared = DB::table('ch_favorites')
+        ->where('user_id', $authId)
+        ->where('favorite_id', $item->id)
+        ->exists();
         return [
             'id'    => $item->id,
             'name'  => $item->name,
@@ -68,7 +94,8 @@ trait Mapping
             'phone' => $item->phone,
             'privacy' => $item->privacy,
             'active-status' => $item->active_status,
-            'avatar'    => $item->avatar? url('storage/avatars/'.basename($item->avatar)): null
+            'avatar'    => $item->avatar? url('storage/avatars/'.basename($item->avatar)): null,
+            'isUserStared' => $isStared,
         ];
     }
 
@@ -237,6 +264,6 @@ trait Mapping
     }
 
 }
-this file changed after install and use ffmpeg local
+// this file changed after install and use ffmpeg local
 
-there is any thing that prevent use ffmpeg -y in the server after upload the content of file above
+// there is any thing that prevent use ffmpeg -y in the server after upload the content of file above

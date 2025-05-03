@@ -117,19 +117,36 @@ class PostRepository implements PostRepositoryInterface
         $peopleSameCountry = User::where('country_id', auth()->user()->country_id ?? 999)->select('users.id')
             ->limit(300)->orderBy('updated_at', 'desc')->get()->pluck(['id']);
 
+        // $posts = Post::with([
+        //         'mood', 'taggedFriends', 'taggedBooks', 'media', 'user', 'tagsTranslated', 'myReactions'
+        //     ])->withCount(['comments'])
+        //     ->where(function($query)use($currentAuthUserFriends){
+        //         $query->whereIn('user_id', $currentAuthUserFriends)
+        //             ->Where('privacy', '!=', PrivacyEnum::PRIVATE);
+        //     })
+        //     ->orWhere(function($query)use($peopleSameCountry){
+        //         $query->whereIn('user_id', $peopleSameCountry)
+        //             ->where('privacy', PrivacyEnum::PUBLIC);
+        //     })
+        //     ->orderBy('created_at', 'desc')
+        //     ->paginate($per_page);
         $posts = Post::with([
-                'mood', 'taggedFriends', 'taggedBooks', 'media', 'user', 'tagsTranslated', 'myReactions'
-            ])->withCount(['comments'])
-            ->where(function($query)use($currentAuthUserFriends){
-                $query->whereIn('user_id', $currentAuthUserFriends)
-                    ->Where('privacy', '!=', PrivacyEnum::PRIVATE);
-            })
-            ->orWhere(function($query)use($peopleSameCountry){
-                $query->whereIn('user_id', $peopleSameCountry)
-                    ->where('privacy', PrivacyEnum::PUBLIC);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate($per_page);
+            'mood', 'taggedFriends', 'taggedBooks', 'media', 'user', 'tagsTranslated', 'myReactions'
+        ])
+        ->withCount(['comments'])
+        ->where(function($query) use ($currentAuthUserFriends) {
+            $query->where(function ($q) use ($currentAuthUserFriends) {
+                $q->whereIn('user_id', $currentAuthUserFriends)
+                  ->where('privacy', '!=', PrivacyEnum::PRIVATE);
+            })->orWhere(function ($q) {
+                $q->where('user_id', auth()->id())
+                  ->whereIn('privacy', [PrivacyEnum::FRIENDS, PrivacyEnum::PUBLIC]); // or whatever you need
+            });
+        })
+        
+        ->orderBy('created_at', 'desc')
+        ->paginate($per_page);
+    
         $posts->getCollection()->transform([$this, 'postMap']);
 
        return $posts;

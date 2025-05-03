@@ -95,6 +95,7 @@ Route::prefix('v1')->group(function(){
             Route::post('/friend-request/{user_id}/send', [\App\Http\Controllers\API\FriendshipController::class, 'sendFriendRequest']);
             Route::post('/friend-request/{sender_id}/accept', [\App\Http\Controllers\API\FriendshipController::class, 'acceptFriendRequest']);
             Route::post('/friend-request/{sender_id}/deny', [\App\Http\Controllers\API\FriendshipController::class, 'denyFriendRequest']);
+            Route::post('/friend-request/{reciever_id}/remove', [\App\Http\Controllers\API\FriendshipController::class, 'removeFriendRequest']);
             Route::get('/friend-requests', [\App\Http\Controllers\API\FriendshipController::class, 'getFriendRequests']);
             Route::post('/{user_id}/unfriend', [\App\Http\Controllers\API\FriendshipController::class, 'unfriend']);
             Route::get('/friends', [\App\Http\Controllers\API\FriendshipController::class, 'getFriends']);
